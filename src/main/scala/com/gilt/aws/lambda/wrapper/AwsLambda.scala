@@ -1,11 +1,12 @@
 package com.gilt.aws.lambda.wrapper
 
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
-import com.amazonaws.services.lambda.AWSLambdaClientBuilder
-import com.amazonaws.services.lambda.model._
+// import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
+// import com.amazonaws.services.lambda.AWSLambdaClientBuilder
+// import com.amazonaws.services.lambda.model._
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProviderChain
 import scala.util.Try
-
 import com.gilt.aws.lambda.Region
+import software.amazon.awssdk.services.lambda.model._
 
 trait AwsLambda {
   def createFunction(req: CreateFunctionRequest): Try[CreateFunctionResult]
@@ -19,7 +20,7 @@ trait AwsLambda {
 
 object AwsLambda {
   def instance(region: Region): AwsLambda = {
-    val auth = new DefaultAWSCredentialsProviderChain()
+    val auth = AwsCredentialsProviderChain.builder.build
     val client = AWSLambdaClientBuilder.standard()
       .withCredentials(auth)
       .withRegion(region.value)

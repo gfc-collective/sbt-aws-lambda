@@ -3,6 +3,8 @@ package com.gilt.aws.lambda.wrapper
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model.{Region => _, _}
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProviderChain
+
 import scala.util.Try
 
 import com.gilt.aws.lambda.Region

@@ -1,7 +1,10 @@
 package com.gilt.aws.lambda
 
-import com.amazonaws.services.s3.model._
+// import com.amazonaws.services.s3.model._
 import java.io.File
+
+import software.amazon.awssdk.services.s3.model.PutObjectRequest
+
 import scala.collection.JavaConverters._
 import scala.util.Try
 

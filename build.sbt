@@ -43,3 +43,23 @@ lazy val scalajsPlugin =
       },
     ).enablePlugins(SbtPlugin)
 
+val awsSdkVersion = "2.1.3"
+
+libraryDependencies ++= Seq(
+  "software.amazon.awssdk"  % "iam"    % awsSdkVersion,
+  "software.amazon.awssdk"  % "lambda" % awsSdkVersion,
+  "software.amazon.awssdk"  % "s3"     % awsSdkVersion,
+  "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.0"
+)
+
+javaVersionPrefix in javaVersionCheck := Some("1.8")
+
+crossSbtVersions := List("0.13.17", "1.2.6")
+
+releaseCrossBuild := true
+
+releasePublishArtifactsAction := PgpKeys.publishSigned.value
+
+// Testing
+libraryDependencies += "com.lihaoyi" %% "utest" % "0.6.6" % "test"
+testFrameworks += new TestFramework("utest.runner.Framework")

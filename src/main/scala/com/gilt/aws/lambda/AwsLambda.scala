@@ -1,7 +1,9 @@
 package com.gilt.aws.lambda
 
 import java.time.Instant
-import com.amazonaws.services.lambda.model._
+
+import software.amazon.awssdk.services.lambda.model._
+// import com.amazonaws.services.lambda.model._
 import scala.collection.JavaConverters._
 import scala.util.Try
 
@@ -53,7 +55,7 @@ private[lambda] class AwsLambda(client: wrapper.AwsLambda) {
     functionName: LambdaName,
   ): Try[Option[GetFunctionConfigurationResult]] = {
     val request = new GetFunctionConfigurationRequest()
-      .withFunctionName(functionName.value)
+      .functionName(functionName.value)
 
     client.getFunctionConfiguration(request)
       .map(Option.apply)

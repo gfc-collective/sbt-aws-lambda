@@ -1,6 +1,8 @@
 package com.gilt.aws.lambda
 
-import com.amazonaws.services.identitymanagement.model._
+// import com.amazonaws.services.identitymanagement.model._
+import software.amazon.awssdk.services.iam.model._
+
 import scala.collection.JavaConverters._
 import scala.util.Try
 

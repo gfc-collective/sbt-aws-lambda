@@ -28,8 +28,8 @@ private[lambda] class AwsLambda(client: wrapper.AwsLambda) {
     println(s"Updating lambda code ${updateFunctionCodeRequest.getFunctionName}")
     for {
       updateResult <- client.updateFunctionCode(updateFunctionCodeRequest)
-      _ = println(s"Updated lambda code ${updateResult.getFunctionArn}")
-      _ <- publishVersion(name = updateResult.getFunctionName, revisionId = updateResult.getRevisionId, version = version)
+      _ = println(s"Updated lambda code ${updateResult.functionArn}")
+      _ <- publishVersion(name = updateResult.functionName, revisionId = updateResult.revisionId, version = version)
     } yield {
       updateResult
     }
@@ -44,9 +44,10 @@ private[lambda] class AwsLambda(client: wrapper.AwsLambda) {
       "deploy.timestamp" -> Instant.now.toString
     )
 
-    val tagResourceReq = new TagResourceRequest()
-      .withResource(functionArn)
-      .withTags(tags.asJava)
+    val tagResourceReq = TagResourceRequest.builder
+      .resource(functionArn)
+      .tags(tags.asJava)
+      .build
 
     client.tagResource(tagResourceReq)
   }
@@ -56,6 +57,7 @@ private[lambda] class AwsLambda(client: wrapper.AwsLambda) {
   ): Try[Option[GetFunctionConfigurationResult]] = {
     val request = new GetFunctionConfigurationRequest()
       .functionName(functionName.value)
+      .build
 
     client.getFunctionConfiguration(request)
       .map(Option.apply)

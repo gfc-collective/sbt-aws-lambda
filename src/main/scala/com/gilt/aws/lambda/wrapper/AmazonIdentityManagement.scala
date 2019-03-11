@@ -14,8 +14,7 @@ trait AmazonIdentityManagement {
 object AmazonIdentityManagement {
   def instance(): AmazonIdentityManagement = {
     val credentialsProvider = AwsCredentialsProviderChain.builder.build
-    val client = IamClient.builder.credentialsProvider(credentialsProvider)
-        .build
+    val client = IamClient.builder.credentialsProvider(credentialsProvider).build
 
     new AmazonIdentityManagement {
         def listRoles() = Try(client.listRoles)

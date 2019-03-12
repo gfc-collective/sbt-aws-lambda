@@ -7,6 +7,7 @@ import scala.util.{Failure, Success, Try}
 import com.amazonaws.services.lambda.model.{Environment, FunctionCode, Runtime, UpdateFunctionCodeRequest, VpcConfig}
 import sbt.Keys._
 import sbt._
+import software.amazon.awssdk.regions.Region
 
 object AwsLambdaPlugin extends AutoPlugin {
 
@@ -233,7 +234,7 @@ object AwsLambdaPlugin extends AutoPlugin {
 
     val resolvedVpcConfig = {
       val config_ = resolvedVpcConfigSubnetIds.map(ids => VpcConfig.builder.subnetIds(ids.value.split(",") :_*).build)
-      resolvedVpcConfigSecurityGroupIds.fold(config_)(ids => Some(config_.getOrElse(VpcConfig.builder).securityGroupIds(ids.value.split(",") :_*)))
+      resolvedVpcConfigSecurityGroupIds.fold(config_)(ids => Some(config_.getOrElse(VpcConfig.builder.securityGroupIds(ids.value.split(",") :_*).build)))
     }
 
     val lambdaClient = new AwsLambda(wrapper.AwsLambda.instance(resolvedRegion))
@@ -342,8 +343,8 @@ object AwsLambdaPlugin extends AutoPlugin {
     val resolvedVpcConfigSubnetIds = resolveVpcConfigSubnetIds(vpcConfigSubnetIds)
     val resolvedVpcConfigSecurityGroupIds = resolveVpcConfigSecurityGroupIds(vpcConfigSecurityGroupIds)
     val resolvedVpcConfig = {
-      val config_ = resolvedVpcConfigSubnetIds.map(ids => new VpcConfig().withSubnetIds(ids.value.split(",") :_*))
-      resolvedVpcConfigSecurityGroupIds.fold(config_)(ids => Some(config_.getOrElse(new VpcConfig()).withSecurityGroupIds(ids.value.split(",") :_*)))
+      val config_ = resolvedVpcConfigSubnetIds.map(ids => VpcConfig.builder.subnetIds(ids.value.split(",") :_*).build)
+      resolvedVpcConfigSecurityGroupIds.fold(config_)(ids => Some(config_.getOrElse(VpcConfig.builder.securityGroupIds(ids.value.split(",") :_*).build)))
     }
     val (_, resolvedEnvironment) = computeEnvironment(Collections.emptyMap(), environment)
 
@@ -355,7 +356,7 @@ object AwsLambdaPlugin extends AutoPlugin {
       s3Client.pushJarToS3(jar, resolvedBucketId, resolvedS3KeyPrefix) match {
         case Success(_) =>
           for ((resolvedLambdaName, resolvedHandlerName) <- resolvedLambdaHandlers) yield {
-            val functionCode = FunctionCode.builder.withS3Bucket(resolvedBucketId.value).withS3Key(jar.getName)
+            val functionCode = FunctionCode.builder.s3Bucket(resolvedBucketId.value).s3Key(jar.getName).build
 
             createLambdaWithFunctionCode(
               resolvedRegion,
@@ -428,7 +429,7 @@ object AwsLambdaPlugin extends AutoPlugin {
       version,
     ) match {
       case Success(createFunctionCodeResult) =>
-        resolvedLambdaName.value -> LambdaARN(createFunctionCodeResult.getFunctionArn)
+        resolvedLambdaName.value -> LambdaARN(createFunctionCodeResult.functionArn)
       case Failure(exception) =>
         sys.error(s"Failed to create lambda function: ${formatException(exception)}")
     }
@@ -523,7 +524,7 @@ object AwsLambdaPlugin extends AutoPlugin {
   ): Region = {
     val inputValue = readInput(s"Enter the name of the AWS region to connect to. (You also could have set the environment variable: ${EnvironmentVariables.region} or the sbt setting: region)")
 
-    Region(inputValue)
+    Region.of(inputValue)
   }
 
   private def promptUserForDeployMethod(

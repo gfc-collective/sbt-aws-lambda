@@ -11,7 +11,7 @@ enablePlugins(SbtPlugin)
 libraryDependencies += {
   val sbtV     = (sbtBinaryVersion in pluginCrossBuild).value
   val scalaV   = (scalaBinaryVersion in update).value
-  val assembly = "com.eed3si9n" % "sbt-assembly" % "0.14.9"
+  val assembly = "com.eed3si9n" % "sbt-assembly" % "0.14.10"
   Defaults.sbtPluginExtra(assembly, sbtV, scalaV)
 }
 

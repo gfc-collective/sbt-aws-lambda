@@ -10,10 +10,10 @@ pomIncludeRepository := { _ => false }
 sonatypeProfileName := "com.gilt"
 
 pomExtra := {
-  <url>https://github.com/gilt/sbt-aws-lambda</url>
+  <url>https://github.com/gfc-collective/sbt-aws-lambda</url>
   <scm>
-    <url>git@github.com:gilt/sbt-aws-lambda.git</url>
-    <connection>scm:git:git@github.com:gilt/sbt-aws-lambda.git</connection>
+    <url>git@github.com:gfc-collective/sbt-aws-lambda.git</url>
+    <connection>scm:git:git@github.com:gfc-collective/sbt-aws-lambda.git</connection>
   </scm>
   <licenses>
     <license>

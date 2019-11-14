@@ -1,15 +1,17 @@
 package com.gilt.aws.lambda
 
-import com.amazonaws.services.s3.model._
 import java.io.File
-import scala.util.{Failure, Success, Try}
 
+import software.amazon.awssdk.services.s3.model.{Bucket, CreateBucketResponse, ListBucketsResponse, PutObjectRequest, PutObjectResponse}
+
+import scala.util.{Failure, Success, Try}
 import utest._
 
 trait NotImplementedAmazonS3Wrapper extends wrapper.AmazonS3 {
-  def listBuckets(): Try[java.util.List[Bucket]] = ???
-  def createBucket(bucket: String): Try[Bucket] = ???
-  def putObject(req: PutObjectRequest): Try[PutObjectResult] = ???
+  def listBuckets(): Try[ListBucketsResponse] = ???
+  def createBucket(bucket: String): Try[CreateBucketResponse] = ???
+  def putObject(req: PutObjectRequest, path: java.nio.file.Path): Try[PutObjectResponse] = ???
+
 }
 
 object AwsS3Tests extends TestSuite {
@@ -36,7 +38,7 @@ object AwsS3Tests extends TestSuite {
     val bucket = "my-bucket"
     val client = new NotImplementedAmazonS3Wrapper {
       override def putObject(req: PutObjectRequest) = {
-        assert(req.getBucketName == bucket)
+        assert(req.bucket == bucket)
         Failure(new Throwable)
       }
     }

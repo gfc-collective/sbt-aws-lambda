@@ -1,19 +1,25 @@
 package com.gilt.aws.lambda
 
-import com.amazonaws.services.lambda.model._
+import java.{lang, util}
+import java.util.function.Consumer
+
+import software.amazon.awssdk.awscore.AwsResponseMetadata
+import software.amazon.awssdk.core.{SdkField, SdkResponse}
+import software.amazon.awssdk.http.SdkHttpResponse
+import software.amazon.awssdk.services.lambda.model
+import software.amazon.awssdk.services.lambda.model.{CreateFunctionRequest, CreateFunctionResponse, DeadLetterConfig, EnvironmentResponse, GetFunctionConfigurationRequest, GetFunctionConfigurationResponse, LambdaResponse, LambdaResponseMetadata, Layer, PublishVersionRequest, PublishVersionResponse, TagResourceRequest, TagResourceResponse, TracingConfigResponse, UpdateFunctionCodeRequest, UpdateFunctionCodeResponse, UpdateFunctionConfigurationRequest, UpdateFunctionConfigurationResponse, VpcConfigResponse}
+
 import scala.collection.JavaConverters._
 import scala.util.{Failure, Success, Try}
-
 import utest._
 
 trait NotImplementedAwsLambdaWrapper extends wrapper.AwsLambda {
-  def createFunction(req: CreateFunctionRequest): Try[CreateFunctionResult] = ???
-  def updateFunctionCode(req: UpdateFunctionCodeRequest): Try[UpdateFunctionCodeResult] = ???
-  def getFunctionConfiguration(req: GetFunctionConfigurationRequest): Try[GetFunctionConfigurationResult] = ???
-  def updateFunctionConfiguration(req: UpdateFunctionConfigurationRequest): Try[UpdateFunctionConfigurationResult] = ???
-  def tagResource(req: TagResourceRequest): Try[TagResourceResult] = ???
-  def publishVersion(
-      request: PublishVersionRequest): Try[PublishVersionResult] = ???
+  def createFunction(req: CreateFunctionRequest): Try[CreateFunctionResponse] = ???
+  def updateFunctionCode(req: UpdateFunctionCodeRequest): Try[UpdateFunctionCodeResponse] = ???
+  def getFunctionConfiguration(req: GetFunctionConfigurationRequest): Try[GetFunctionConfigurationResponse] = ???
+  def updateFunctionConfiguration(req: UpdateFunctionConfigurationRequest): Try[UpdateFunctionConfigurationResponse] = ???
+  def tagResource(req: TagResourceRequest): Try[TagResourceResponse] = ???
+  def publishVersion(request: PublishVersionRequest): Try[PublishVersionResponse] = ???
 }
 
 object AwsLambdaTests extends TestSuite {
@@ -69,7 +75,7 @@ object AwsLambdaTests extends TestSuite {
     val arn = "my-arn"
     val client = new NotImplementedAwsLambdaWrapper {
       override def tagResource(req: TagResourceRequest) = {
-        assert(req.getResource() == arn)
+        assert(req.resource() == arn)
         Failure(new Throwable)
       }
     }
@@ -83,9 +89,9 @@ object AwsLambdaTests extends TestSuite {
     val version = "version"
     val client = new NotImplementedAwsLambdaWrapper {
       override def publishVersion(request: PublishVersionRequest) = {
-        assert(request.getFunctionName == name)
-        assert(request.getRevisionId == revisionId)
-        assert(request.getDescription == version)
+        assert(request.functionName == name)
+        assert(request.revisionId == revisionId)
+        assert(request.description == version)
         Failure(new Throwable)
       }
     }
@@ -96,7 +102,7 @@ object AwsLambdaTests extends TestSuite {
   def tagWithTimestamp = {
     val client = new NotImplementedAwsLambdaWrapper {
       override def tagResource(req: TagResourceRequest) = {
-        assert(req.getTags().asScala.contains("deploy.timestamp"))
+        assert(req.tags().asScala.contains("deploy.timestamp"))
         Failure(new Throwable)
       }
     }
@@ -108,7 +114,7 @@ object AwsLambdaTests extends TestSuite {
     val version = "my-version"
     val client = new NotImplementedAwsLambdaWrapper {
       override def tagResource(req: TagResourceRequest) = {
-        assert(req.getTags().asScala.get("deploy.code.version") == Some(version))
+        assert(req.tags().asScala.get("deploy.code.version") == Some(version))
         Failure(new Throwable)
       }
     }
@@ -120,7 +126,7 @@ object AwsLambdaTests extends TestSuite {
     val functionName = "my-function-name"
     val client = new NotImplementedAwsLambdaWrapper {
       override def getFunctionConfiguration(req: GetFunctionConfigurationRequest) = {
-        assert(req.getFunctionName() == functionName)
+        assert(req.functionName() == functionName)
         Failure(new Throwable)
       }
     }
@@ -129,7 +135,65 @@ object AwsLambdaTests extends TestSuite {
   }
 
   def getSuccess = {
-    val expected = new GetFunctionConfigurationResult()
+    val expected = GetFunctionConfigurationResponse.builder().build()
+      override def functionName(functionName: String): GetFunctionConfigurationResponse.Builder = .
+
+      override def functionArn(functionArn: String): GetFunctionConfigurationResponse.Builder = ???
+
+      override def runtime(runtime: String): GetFunctionConfigurationResponse.Builder = ???
+
+      override def runtime(runtime: model.Runtime): GetFunctionConfigurationResponse.Builder = ???
+
+      override def role(role: String): GetFunctionConfigurationResponse.Builder = ???
+
+      override def handler(handler: String): GetFunctionConfigurationResponse.Builder = ???
+
+      override def codeSize(codeSize: lang.Long): GetFunctionConfigurationResponse.Builder = ???
+
+      override def description(description: String): GetFunctionConfigurationResponse.Builder = ???
+
+      override def timeout(timeout: Integer): GetFunctionConfigurationResponse.Builder = ???
+
+      override def memorySize(memorySize: Integer): GetFunctionConfigurationResponse.Builder = ???
+
+      override def lastModified(lastModified: String): GetFunctionConfigurationResponse.Builder = ???
+
+      override def codeSha256(codeSha256: String): GetFunctionConfigurationResponse.Builder = ???
+
+      override def version(version: String): GetFunctionConfigurationResponse.Builder = ???
+
+      override def vpcConfig(vpcConfig: VpcConfigResponse): GetFunctionConfigurationResponse.Builder = ???
+
+      override def deadLetterConfig(deadLetterConfig: DeadLetterConfig): GetFunctionConfigurationResponse.Builder = ???
+
+      override def environment(environment: EnvironmentResponse): GetFunctionConfigurationResponse.Builder = ???
+
+      override def kmsKeyArn(kmsKeyArn: String): GetFunctionConfigurationResponse.Builder = ???
+
+      override def tracingConfig(tracingConfig: TracingConfigResponse): GetFunctionConfigurationResponse.Builder = ???
+
+      override def masterArn(masterArn: String): GetFunctionConfigurationResponse.Builder = ???
+
+      override def revisionId(revisionId: String): GetFunctionConfigurationResponse.Builder = ???
+
+      override def layers(layers: util.Collection[Layer]): GetFunctionConfigurationResponse.Builder = ???
+
+      override def layers(layers: Layer*): GetFunctionConfigurationResponse.Builder = ???
+
+      override def layers(layers: Consumer[Layer.Builder]*): GetFunctionConfigurationResponse.Builder = ???
+
+      override def sdkFields(): (util.List[SdkField[_$1]]) forSome {type _$1} = ???
+
+      override def responseMetadata(): LambdaResponseMetadata = ???
+
+      override def responseMetadata(metadata: AwsResponseMetadata): LambdaResponse.Builder = ???
+
+      override def sdkHttpResponse(sdkHttpResponse: SdkHttpResponse): SdkResponse.Builder = ???
+
+      override def sdkHttpResponse(): SdkHttpResponse = ???
+
+      override def build(): GetFunctionConfigurationResponse = ???
+    }
     val client = new NotImplementedAwsLambdaWrapper {
       override def getFunctionConfiguration(req: GetFunctionConfigurationRequest) = {
         Success(expected)

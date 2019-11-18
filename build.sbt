@@ -43,7 +43,7 @@ lazy val scalajsPlugin =
       },
     ).enablePlugins(SbtPlugin)
 
-val awsSdkVersion = "2.10.15"
+val awsSdkVersion = "2.10.19"
 
 libraryDependencies ++= Seq(
   "software.amazon.awssdk"  % "iam"    % awsSdkVersion,

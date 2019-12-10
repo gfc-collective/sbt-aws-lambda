@@ -32,5 +32,5 @@ releaseCrossBuild := true
 releasePublishArtifactsAction := PgpKeys.publishSigned.value
 
 // Testing
-libraryDependencies += "com.lihaoyi" %% "utest" % "0.7.1" % "test"
+libraryDependencies += "com.lihaoyi" %% "utest" % "0.7.2" % "test"
 testFrameworks += new TestFramework("utest.runner.Framework")

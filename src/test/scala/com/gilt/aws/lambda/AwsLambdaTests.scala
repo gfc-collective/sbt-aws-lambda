@@ -136,7 +136,7 @@ object AwsLambdaTests extends TestSuite {
 
   def getSuccess = {
     val expected = GetFunctionConfigurationResponse.builder().build()
-      override def functionName(functionName: String): GetFunctionConfigurationResponse.Builder = .
+      override def functionName(functionName: String): GetFunctionConfigurationResponse.Builder = ???
 
       override def functionArn(functionArn: String): GetFunctionConfigurationResponse.Builder = ???
 

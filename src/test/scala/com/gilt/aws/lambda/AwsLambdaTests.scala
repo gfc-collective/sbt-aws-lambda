@@ -7,7 +7,7 @@ import software.amazon.awssdk.awscore.AwsResponseMetadata
 import software.amazon.awssdk.core.{SdkField, SdkResponse}
 import software.amazon.awssdk.http.SdkHttpResponse
 import software.amazon.awssdk.services.lambda.model
-import software.amazon.awssdk.services.lambda.model.{CreateFunctionRequest, CreateFunctionResponse, DeadLetterConfig, EnvironmentResponse, GetFunctionConfigurationRequest, GetFunctionConfigurationResponse, LambdaResponse, LambdaResponseMetadata, Layer, PublishVersionRequest, PublishVersionResponse, TagResourceRequest, TagResourceResponse, TracingConfigResponse, UpdateFunctionCodeRequest, UpdateFunctionCodeResponse, UpdateFunctionConfigurationRequest, UpdateFunctionConfigurationResponse, VpcConfigResponse}
+import software.amazon.awssdk.services.lambda.model.{CreateFunctionRequest, CreateFunctionResponse, DeadLetterConfig, Environment, EnvironmentResponse, GetFunctionConfigurationRequest, GetFunctionConfigurationResponse, LambdaResponse, LambdaResponseMetadata, Layer, PublishVersionRequest, PublishVersionResponse, ResourceNotFoundException, TagResourceRequest, TagResourceResponse, TracingConfigResponse, UpdateFunctionCodeRequest, UpdateFunctionCodeResponse, UpdateFunctionConfigurationRequest, UpdateFunctionConfigurationResponse, VpcConfig, VpcConfigResponse}
 
 import scala.collection.JavaConverters._
 import scala.util.{Failure, Success, Try}
@@ -136,64 +136,7 @@ object AwsLambdaTests extends TestSuite {
 
   def getSuccess = {
     val expected = GetFunctionConfigurationResponse.builder().build()
-      override def functionName(functionName: String): GetFunctionConfigurationResponse.Builder = ???
 
-      override def functionArn(functionArn: String): GetFunctionConfigurationResponse.Builder = ???
-
-      override def runtime(runtime: String): GetFunctionConfigurationResponse.Builder = ???
-
-      override def runtime(runtime: model.Runtime): GetFunctionConfigurationResponse.Builder = ???
-
-      override def role(role: String): GetFunctionConfigurationResponse.Builder = ???
-
-      override def handler(handler: String): GetFunctionConfigurationResponse.Builder = ???
-
-      override def codeSize(codeSize: lang.Long): GetFunctionConfigurationResponse.Builder = ???
-
-      override def description(description: String): GetFunctionConfigurationResponse.Builder = ???
-
-      override def timeout(timeout: Integer): GetFunctionConfigurationResponse.Builder = ???
-
-      override def memorySize(memorySize: Integer): GetFunctionConfigurationResponse.Builder = ???
-
-      override def lastModified(lastModified: String): GetFunctionConfigurationResponse.Builder = ???
-
-      override def codeSha256(codeSha256: String): GetFunctionConfigurationResponse.Builder = ???
-
-      override def version(version: String): GetFunctionConfigurationResponse.Builder = ???
-
-      override def vpcConfig(vpcConfig: VpcConfigResponse): GetFunctionConfigurationResponse.Builder = ???
-
-      override def deadLetterConfig(deadLetterConfig: DeadLetterConfig): GetFunctionConfigurationResponse.Builder = ???
-
-      override def environment(environment: EnvironmentResponse): GetFunctionConfigurationResponse.Builder = ???
-
-      override def kmsKeyArn(kmsKeyArn: String): GetFunctionConfigurationResponse.Builder = ???
-
-      override def tracingConfig(tracingConfig: TracingConfigResponse): GetFunctionConfigurationResponse.Builder = ???
-
-      override def masterArn(masterArn: String): GetFunctionConfigurationResponse.Builder = ???
-
-      override def revisionId(revisionId: String): GetFunctionConfigurationResponse.Builder = ???
-
-      override def layers(layers: util.Collection[Layer]): GetFunctionConfigurationResponse.Builder = ???
-
-      override def layers(layers: Layer*): GetFunctionConfigurationResponse.Builder = ???
-
-      override def layers(layers: Consumer[Layer.Builder]*): GetFunctionConfigurationResponse.Builder = ???
-
-      override def sdkFields(): (util.List[SdkField[_$1]]) forSome {type _$1} = ???
-
-      override def responseMetadata(): LambdaResponseMetadata = ???
-
-      override def responseMetadata(metadata: AwsResponseMetadata): LambdaResponse.Builder = ???
-
-      override def sdkHttpResponse(sdkHttpResponse: SdkHttpResponse): SdkResponse.Builder = ???
-
-      override def sdkHttpResponse(): SdkHttpResponse = ???
-
-      override def build(): GetFunctionConfigurationResponse = ???
-    }
     val client = new NotImplementedAwsLambdaWrapper {
       override def getFunctionConfiguration(req: GetFunctionConfigurationRequest) = {
         Success(expected)
@@ -256,7 +199,7 @@ object AwsLambdaTests extends TestSuite {
     val functionName = "my-function-name"
     val client = new NotImplementedAwsLambdaWrapper {
       override def updateFunctionConfiguration(req: UpdateFunctionConfigurationRequest) = {
-        assert(req.getFunctionName == functionName)
+        assert(req.functionName == functionName)
         Failure(new Throwable)
       }
     }
@@ -268,7 +211,7 @@ object AwsLambdaTests extends TestSuite {
     val handler = "my-handler"
     val client = new NotImplementedAwsLambdaWrapper {
       override def updateFunctionConfiguration(req: UpdateFunctionConfigurationRequest) = {
-        assert(req.getHandler == handler)
+        assert(req.handler == handler)
         Failure(new Throwable)
       }
     }
@@ -280,7 +223,7 @@ object AwsLambdaTests extends TestSuite {
     val role = "my-role"
     val client = new NotImplementedAwsLambdaWrapper {
       override def updateFunctionConfiguration(req: UpdateFunctionConfigurationRequest) = {
-        assert(req.getRole == role)
+        assert(req.role == role)
         Failure(new Throwable)
       }
     }
@@ -291,7 +234,7 @@ object AwsLambdaTests extends TestSuite {
   def updateWithRuntime = {
     val client = new NotImplementedAwsLambdaWrapper {
       override def updateFunctionConfiguration(req: UpdateFunctionConfigurationRequest) = {
-        assert(req.getRuntime == "java8")
+        assert(req.runtime.name == "java8")
         Failure(new Throwable)
       }
     }
@@ -303,7 +246,7 @@ object AwsLambdaTests extends TestSuite {
     val environmentVariables = Map("a" -> "1", "b" -> "2", "c" -> "3").asJava
     val client = new NotImplementedAwsLambdaWrapper {
       override def updateFunctionConfiguration(req: UpdateFunctionConfigurationRequest) = {
-        assert(req.getEnvironment.getVariables() == environmentVariables)
+        assert(req.environment.variables == environmentVariables)
         Failure(new Throwable)
       }
     }
@@ -315,7 +258,7 @@ object AwsLambdaTests extends TestSuite {
     val timeout = 1
     val client = new NotImplementedAwsLambdaWrapper {
       override def updateFunctionConfiguration(req: UpdateFunctionConfigurationRequest) = {
-        assert(req.getTimeout == timeout)
+        assert(req.timeout.intValue == timeout.intValue)
         Failure(new Throwable)
       }
     }
@@ -326,7 +269,7 @@ object AwsLambdaTests extends TestSuite {
   def updateWithoutTimeout = {
     val client = new NotImplementedAwsLambdaWrapper {
       override def updateFunctionConfiguration(req: UpdateFunctionConfigurationRequest) = {
-        assert(req.getTimeout == null)
+        assert(req.timeout == null)
         Failure(new Throwable)
       }
     }

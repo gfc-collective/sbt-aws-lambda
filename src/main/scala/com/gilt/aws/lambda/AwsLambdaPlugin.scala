@@ -31,7 +31,7 @@ object AwsLambdaPlugin extends AutoPlugin {
     val vpcConfigSubnetIds = settingKey[Option[String]]("Comma separated list of subnet IDs for the VPC")
     val vpcConfigSecurityGroupIds = settingKey[Option[String]]("Comma separated list of security group IDs for the VPC")
     val environment = settingKey[Seq[(String, String)]]("A sequence of environment keys and values")
-    val lambdaRuntime = settingKey[Option[String]](s"""The Lambda Runtime. Currently supported values are [${supportedLambdaRuntimes.mkString(",")}]""")
+    val lambdaRuntime = settingKey[String](s"""The Lambda Runtime. Currently supported values are [${supportedLambdaRuntimes.mkString(",")}]""")
     val packageLambda = taskKey[File]("The action to package the lambda jar file")
   }
 
@@ -113,7 +113,7 @@ object AwsLambdaPlugin extends AutoPlugin {
     vpcConfigSubnetIds := None,
     vpcConfigSecurityGroupIds := None,
     environment := Nil,
-    lambdaRuntime := None,
+    lambdaRuntime := supportedLambdaRuntimes.head,
     packageLambda := sbtassembly.AssemblyKeys.assembly.value
   )
 
@@ -202,7 +202,7 @@ object AwsLambdaPlugin extends AutoPlugin {
     vpcConfigSubnetIds: Option[String],
     vpcConfigSecurityGroupIds: Option[String],
     environment: Map[String, String],
-    lambdaRuntime: Option[String],
+    lambdaRuntime: String,
     deployMethod: Option[String],
     jar: File, s3Bucket: Option[String],
     s3KeyPrefix: Option[String],
@@ -316,7 +316,7 @@ object AwsLambdaPlugin extends AutoPlugin {
     vpcConfigSubnetIds: Option[String],
     vpcConfigSecurityGroupIds: Option[String],
     environment: Map[String, String],
-    lambdaRuntime: Option[String],
+    lambdaRuntime: String,
     version: String,
   ): Map[String, LambdaARN] = {
     val resolvedDeployMethod = resolveDeployMethod(deployMethod).value
@@ -497,13 +497,11 @@ object AwsLambdaPlugin extends AutoPlugin {
   }
 
   def resolveLambdaRuntime(
-    lambdaRuntime: Option[String],
+    lambdaRuntime: String,
   ): Runtime = {
-    lambdaRuntime.orElse(sys.env.get(EnvironmentVariables.lambdaRuntime)).map(rt =>
-      Try(Runtime.fromValue(rt)).toOption.getOrElse(
-        resolveLambdaRuntime(Some(promptUserForLambdaRuntime(rt)))
-      )
-    ).getOrElse(Runtime.Java8)
+    Try(Runtime.fromValue(lambdaRuntime)).toOption.getOrElse(
+      resolveLambdaRuntime(promptUserForLambdaRuntime(lambdaRuntime))
+    )
   }
 
   private def promptUserForRegion(

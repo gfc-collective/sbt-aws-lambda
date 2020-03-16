@@ -60,7 +60,7 @@ sbt-aws-lambda can be configured using sbt settings, environment variables or by
 | vpcConfigSubnetIds | AWS_LAMBDA_VPC_CONFIG_SUBNET_IDS | Comma separated list of subnet IDs for the VPC |
 | vpcConfigSecurityGroupIds | AWS_LAMBDA_VPC_CONFIG_SECURITY_GROUP_IDS | Comma separated list of security group IDs for the VPC |
 | environment  |                | Seq[(String, String)] of environment variables to set in the lambda function |
-| lambdaRuntime | AWS_LAMBDA_RUNTIME | The [Lambda Runtime](https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#w501aac27c33 "Runtime documentation") to use. Currently supported values are "java8" and "java11" |
+| lambdaRuntime | | The [Lambda Runtime](https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#w501aac27c33 "Runtime documentation") to use. Currently supported values are "java8" and "java11". Default is "java8" |
 
 An example configuration might look like this:
 

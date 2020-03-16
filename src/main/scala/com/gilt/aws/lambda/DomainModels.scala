@@ -32,5 +32,4 @@ object EnvironmentVariables {
   val deadLetterArn = "AWS_LAMBDA_DEAD_LETTER_ARN"
   val vpcConfigSubnetIds = "AWS_LAMBDA_VPC_CONFIG_SUBNET_IDS"
   val vpcConfigSecurityGroupIds = "AWS_LAMBDA_VPC_CONFIG_SECURITY_GROUP_IDS"
-  val lambdaRuntime = "AWS_LAMBDA_RUNTIME"
 }

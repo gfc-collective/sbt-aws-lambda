@@ -1,7 +1,5 @@
 import scala.sys.process._
 
-val awsSdkVersion = "1.11.713"
-
 lazy val commonSettings = Seq(
   crossSbtVersions := List("1.2.8"),
   name := "sbt-aws-lambda",
@@ -9,13 +7,13 @@ lazy val commonSettings = Seq(
   releaseCrossBuild := true,
   releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   libraryDependencies ++= Seq(
-    "com.amazonaws"  % "aws-java-sdk-iam"    % awsSdkVersion,
-    "com.amazonaws"  % "aws-java-sdk-lambda" % awsSdkVersion,
-    "com.amazonaws"  % "aws-java-sdk-s3"     % awsSdkVersion
+    "com.amazonaws"  % "aws-java-sdk-iam"    % "1.11.753",
+    "com.amazonaws"  % "aws-java-sdk-lambda" % "1.11.753",
+    "com.amazonaws"  % "aws-java-sdk-s3"     % "1.11.753",
   ),
   // Testing
   libraryDependencies += "com.lihaoyi" %% "utest" % "0.7.4" % "test",
-  testFrameworks += new TestFramework("utest.runner.Framework")
+  testFrameworks += new TestFramework("utest.runner.Framework"),
 )
 
 lazy val root =
@@ -28,7 +26,7 @@ lazy val root =
         val scalaV   = (scalaBinaryVersion in update).value
         val assembly = "com.eed3si9n" % "sbt-assembly" % "0.14.10"
         Defaults.sbtPluginExtra(assembly, sbtV, scalaV)
-      }
+      },
     ).enablePlugins(SbtPlugin)
 
 lazy val scalajsPlugin =
@@ -42,6 +40,6 @@ lazy val scalajsPlugin =
         val scalaV   = (scalaBinaryVersion in update).value
         val scalajs = "org.scala-js" %% "sbt-scalajs" % "1.0.0"
         Defaults.sbtPluginExtra(scalajs, sbtV, scalaV)
-      }
+      },
     ).enablePlugins(SbtPlugin)
 

@@ -9,7 +9,6 @@ import sbt.Keys._
 import sbt._
 
 object AwsLambdaPlugin extends AutoPlugin {
-  private val supportedLambdaRuntimes = Seq("java8", "java11")
 
   object autoImport {
     val configureLambda = taskKey[Map[String, LambdaARN]]("Creates a new AWS Lambda if it doesn't exist, or updates it if the configuration has changed.")
@@ -31,8 +30,10 @@ object AwsLambdaPlugin extends AutoPlugin {
     val vpcConfigSubnetIds = settingKey[Option[String]]("Comma separated list of subnet IDs for the VPC")
     val vpcConfigSecurityGroupIds = settingKey[Option[String]]("Comma separated list of security group IDs for the VPC")
     val environment = settingKey[Seq[(String, String)]]("A sequence of environment keys and values")
-    val lambdaRuntime = settingKey[String](s"""The Lambda Runtime. Currently supported values are [${supportedLambdaRuntimes.mkString(",")}]""")
+    val lambdaRuntime = settingKey[String](s"""The Lambda Runtime. Type 'supportedRuntimes' to confirming supported runtimes""")
     val packageLambda = taskKey[File]("The action to package the lambda jar file")
+    private[lambda] val resolveRuntime = taskKey[Runtime]("Resolve lambda runtime")
+    private[lambda] val supportedLambdaRuntimes = settingKey[List[String]]("Supported runtime")
   }
 
   import autoImport._
@@ -57,7 +58,8 @@ object AwsLambdaPlugin extends AutoPlugin {
       jar = packageLambda.value,
       s3Bucket = s3Bucket.value,
       s3KeyPrefix = s3KeyPrefix.?.value,
-      version = version.value
+      version = version.value,
+      resolvedRuntime = resolveRuntime.value
     ),
     deployLambda := doDeployLambda(
       deployMethod = deployMethod.value,
@@ -87,7 +89,8 @@ object AwsLambdaPlugin extends AutoPlugin {
       vpcConfigSecurityGroupIds = vpcConfigSecurityGroupIds.value,
       environment = environment.value.toMap,
       lambdaRuntime = lambdaRuntime.value,
-      version = version.value
+      version = version.value,
+      resolvedRuntime = resolveRuntime.value
     ),
     updateLambda := doDeployLambda(
       deployMethod = deployMethod.value,
@@ -100,6 +103,11 @@ object AwsLambdaPlugin extends AutoPlugin {
       lambdaHandlers = lambdaHandlers.value,
       version = version.value
     ),
+    resolveRuntime := Def.task {
+      val resolvedRuntime = lambdaRuntime.value
+      val resolvedSupportedRuntime = supportedLambdaRuntimes.value
+        resolveLambdaRuntime(promptUserForLambdaRuntime(resolvedRuntime, resolvedSupportedRuntime), resolvedSupportedRuntime)
+    }.value,
     s3Bucket := None,
     lambdaName := Some(sbt.Keys.name.value),
     handlerName := None,
@@ -113,7 +121,11 @@ object AwsLambdaPlugin extends AutoPlugin {
     vpcConfigSubnetIds := None,
     vpcConfigSecurityGroupIds := None,
     environment := Nil,
-    lambdaRuntime := supportedLambdaRuntimes.head,
+    supportedLambdaRuntimes := List(
+      Runtime.Java8,
+      Runtime.Java11
+    ).map(_.toString),
+    lambdaRuntime := supportedLambdaRuntimes.value.head,
     packageLambda := sbtassembly.AssemblyKeys.assembly.value
   )
 
@@ -207,6 +219,7 @@ object AwsLambdaPlugin extends AutoPlugin {
     jar: File, s3Bucket: Option[String],
     s3KeyPrefix: Option[String],
     version: String,
+    resolvedRuntime: Runtime
   ): Map[String, LambdaARN] = {
     val resolvedLambdaHandlers = resolveLambdaHandlers(lambdaName, handlerName, lambdaHandlers)
     val resolvedRegion = resolveRegion(region)
@@ -221,8 +234,6 @@ object AwsLambdaPlugin extends AutoPlugin {
       val config_ = resolvedVpcConfigSubnetIds.map(ids => new VpcConfig().withSubnetIds(ids.value.split(",") :_*))
       resolvedVpcConfigSecurityGroupIds.fold(config_)(ids => Some(config_.getOrElse(new VpcConfig()).withSecurityGroupIds(ids.value.split(",") :_*)))
     }
-
-    val resolvedRuntime = resolveLambdaRuntime(lambdaRuntime)
 
     val lambdaClient = new AwsLambda(wrapper.AwsLambda.instance(resolvedRegion))
     val s3Client = new AwsS3(wrapper.AmazonS3.instance(resolvedRegion))
@@ -318,6 +329,7 @@ object AwsLambdaPlugin extends AutoPlugin {
     environment: Map[String, String],
     lambdaRuntime: String,
     version: String,
+    resolvedRuntime: Runtime
   ): Map[String, LambdaARN] = {
     val resolvedDeployMethod = resolveDeployMethod(deployMethod).value
     val resolvedRegion = resolveRegion(region)
@@ -333,7 +345,6 @@ object AwsLambdaPlugin extends AutoPlugin {
       resolvedVpcConfigSecurityGroupIds.fold(config_)(ids => Some(config_.getOrElse(new VpcConfig()).withSecurityGroupIds(ids.value.split(",") :_*)))
     }
     val (_, resolvedEnvironment) = computeEnvironment(Collections.emptyMap(), environment)
-    val resolvedRuntime = resolveLambdaRuntime(lambdaRuntime)
 
     val s3Client = new AwsS3(wrapper.AmazonS3.instance(resolvedRegion))
 
@@ -497,11 +508,14 @@ object AwsLambdaPlugin extends AutoPlugin {
   }
 
   def resolveLambdaRuntime(
-    lambdaRuntime: String,
+    lambdaRuntime: String, supportedLambdaRuntimes: List[String]
   ): Runtime = {
-    Try(Runtime.fromValue(lambdaRuntime)).toOption.getOrElse(
-      resolveLambdaRuntime(promptUserForLambdaRuntime(lambdaRuntime))
-    )
+    if (!supportedLambdaRuntimes.contains(lambdaRuntime)) resolveLambdaRuntime(promptUserForLambdaRuntime(lambdaRuntime, supportedLambdaRuntimes), supportedLambdaRuntimes)
+    else {
+      Try(Runtime.fromValue(lambdaRuntime)).toOption.getOrElse(
+        resolveLambdaRuntime(promptUserForLambdaRuntime(lambdaRuntime, supportedLambdaRuntimes), supportedLambdaRuntimes)
+      )
+    }
   }
 
   private def promptUserForRegion(
@@ -577,7 +591,7 @@ object AwsLambdaPlugin extends AutoPlugin {
   }
 
   private def promptUserForLambdaRuntime(
-    invalidRuntime: String
+    invalidRuntime: String, supportedLambdaRuntimes: List[String]
   ): String = {
     readInput(s"Invalid runtime [$invalidRuntime]. Enter the name of the AWS Lambda runtime. Currently supported values are [${supportedLambdaRuntimes.mkString(",")}]")
   }

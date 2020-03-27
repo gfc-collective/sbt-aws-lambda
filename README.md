@@ -11,7 +11,7 @@ Installation
 Add the following to your `project/plugins.sbt` file:
 
 ```scala
-addSbtPlugin("org.gfccollective" % "sbt-aws-lambda" % "1.1.0")
+addSbtPlugin("org.gfccollective" % "sbt-aws-lambda" % "1.2.0")
 ```
 
 Add the `AwsLambdaPlugin` auto-plugin to your build.sbt:
@@ -111,6 +111,24 @@ packageLambda := (packageBin in Universal).value
 packageLambda := (packageBin in Compile).value
 
 ``` 
+
+Scala.js Support
+------------------------------
+Add the following to your `project/plugins.sbt` file:
+
+```scala
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.0.0")
+addSbtPlugin("org.gfccollective" % "sbt-aws-lambda-scalajs" % "1.2.0")
+```
+
+Add the following plugins to your build.sbt:
+
+```scala
+enablePlugins(ScalaJSPlugin, AwsLambdaPlugin, AwsLambdaScalaJSPlugin)
+```
+
+You need to put a javascript to be the handler in the project root. Refer [example project](scalajsPlugin/example).
+The runtimes that can be specified in `lambdaRuntime` are` nodejs10.x` and `nodejs12.x`. (Defaults to `nodejs12.x`)
  
 Publishing new versions of this plugin
 --------------------------------------

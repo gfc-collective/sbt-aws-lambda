@@ -38,7 +38,7 @@ lazy val scalajsPlugin =
       libraryDependencies += {
         val sbtV     = (sbtBinaryVersion in pluginCrossBuild).value
         val scalaV   = (scalaBinaryVersion in update).value
-        val scalajs = "org.scala-js" %% "sbt-scalajs" % "1.0.0"
+        val scalajs = "org.scala-js" %% "sbt-scalajs" % "1.0.1"
         Defaults.sbtPluginExtra(scalajs, sbtV, scalaV)
       },
     ).enablePlugins(SbtPlugin)

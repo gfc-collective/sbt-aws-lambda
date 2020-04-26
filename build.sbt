@@ -1,7 +1,5 @@
 import scala.sys.process._
 
-val awsSdkVersion = "1.11.769"
-
 lazy val commonSettings = Seq(
   crossSbtVersions := List("1.2.8"),
   name := "sbt-aws-lambda",
@@ -9,9 +7,9 @@ lazy val commonSettings = Seq(
   releaseCrossBuild := true,
   releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   libraryDependencies ++= Seq(
-    "com.amazonaws"  % "aws-java-sdk-iam"    % awsSdkVersion,
-    "com.amazonaws"  % "aws-java-sdk-lambda" % awsSdkVersion,
-    "com.amazonaws"  % "aws-java-sdk-s3"     % awsSdkVersion,
+    "com.amazonaws"  % "aws-java-sdk-iam"    % "1.11.769",
+    "com.amazonaws"  % "aws-java-sdk-lambda" % "1.11.769",
+    "com.amazonaws"  % "aws-java-sdk-s3"     % "1.11.769",
   ),
   // Testing
   libraryDependencies += "com.lihaoyi" %% "utest" % "0.7.4" % "test",

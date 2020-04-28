@@ -7,9 +7,9 @@ lazy val commonSettings = Seq(
   releaseCrossBuild := true,
   releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   libraryDependencies ++= Seq(
-    "com.amazonaws"  % "aws-java-sdk-iam"    % "1.11.769",
-    "com.amazonaws"  % "aws-java-sdk-lambda" % "1.11.769",
-    "com.amazonaws"  % "aws-java-sdk-s3"     % "1.11.769",
+    "com.amazonaws"  % "aws-java-sdk-iam"    % "1.11.771",
+    "com.amazonaws"  % "aws-java-sdk-lambda" % "1.11.771",
+    "com.amazonaws"  % "aws-java-sdk-s3"     % "1.11.771",
   ),
   // Testing
   libraryDependencies += "com.lihaoyi" %% "utest" % "0.7.4" % "test",

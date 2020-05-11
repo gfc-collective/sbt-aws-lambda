@@ -1,5 +1,7 @@
 import scala.sys.process._
 
+val awsSdkVersion = "2.13.13"
+
 lazy val commonSettings = Seq(
   crossSbtVersions := List("1.2.8"),
   name := "sbt-aws-lambda",

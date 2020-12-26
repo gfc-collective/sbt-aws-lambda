@@ -52,8 +52,6 @@ libraryDependencies ++= Seq(
   "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.0"
 )
 
-javaVersionPrefix in javaVersionCheck := Some("1.8")
-
 crossSbtVersions := List("0.13.17", "1.2.6")
 
 releaseCrossBuild := true

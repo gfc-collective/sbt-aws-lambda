@@ -1,6 +1,6 @@
 import scala.sys.process._
 
-val awsSdkVersion = "2.13.13"
+val awsSdkVersion = "2.15.53"
 
 lazy val commonSettings = Seq(
   crossSbtVersions := List("1.2.8"),
@@ -44,8 +44,6 @@ lazy val scalajsPlugin =
         Defaults.sbtPluginExtra(scalajs, sbtV, scalaV)
       },
     ).enablePlugins(SbtPlugin)
-
-val awsSdkVersion = "2.13.3"
 
 libraryDependencies ++= Seq(
   "software.amazon.awssdk"  % "iam"    % awsSdkVersion,

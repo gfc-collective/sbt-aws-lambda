@@ -8,7 +8,6 @@ import scala.util.Try
 
 private[lambda] class AwsLambda(client: wrapper.AwsLambda) {
 
-<<<<<<< HEAD
   def publishVersion(
     name: String,
     revisionId: String,
@@ -18,17 +17,6 @@ private[lambda] class AwsLambda(client: wrapper.AwsLambda) {
       .withFunctionName(name)
       .withRevisionId(revisionId)
       .withDescription(version)
-=======
-  private val defaultRuntime = Runtime.JAVA8
-
-  def publishVersion(name: String, revisionId: String, version: String)
-  : Try[PublishVersionResponse] = {
-    val request = PublishVersionRequest.builder
-      .functionName(name)
-      .revisionId(revisionId)
-      .description(version)
-      .build
->>>>>>> 3eb40c9 (fix compile errors :-))
     client.publishVersion(request)
   }
 
@@ -77,7 +65,6 @@ private[lambda] class AwsLambda(client: wrapper.AwsLambda) {
       }
   }
 
-<<<<<<< HEAD
   def updateLambdaConfig(
     functionName: LambdaName,
     handlerName: HandlerName,
@@ -97,24 +84,6 @@ private[lambda] class AwsLambda(client: wrapper.AwsLambda) {
         .withRole(roleName.value)
         .withRuntime(runtime)
         .withEnvironment(environment)
-=======
-  def updateLambdaConfig(functionName: LambdaName,
-                         handlerName: HandlerName,
-                         roleName: RoleARN,
-                         timeout:  Option[Timeout],
-                         memory: Option[Memory],
-                         deadLetterName: Option[DeadLetterARN],
-                         vpcConfig: Option[VpcConfig],
-                         environment: Environment,
-                         version: String): Try[UpdateFunctionConfigurationResponse] = {
-
-    var request = UpdateFunctionConfigurationRequest.builder
-        .functionName(functionName.value)
-        .handler(handlerName.value)
-        .role(roleName.value)
-        .runtime(defaultRuntime)
-        .environment(environment)
->>>>>>> 3eb40c9 (fix compile errors :-))
 
     request = timeout.fold(request)(t => request.timeout(t.value))
     request = memory.fold(request)(m => request.memorySize(m.value))
@@ -144,7 +113,6 @@ private[lambda] class AwsLambda(client: wrapper.AwsLambda) {
     version: String,
   ): Try[CreateFunctionResult] = {
 
-<<<<<<< HEAD
     var request = new CreateFunctionRequest()
       .withFunctionName(functionName.value)
       .withHandler(handlerName.value)
@@ -156,19 +124,6 @@ private[lambda] class AwsLambda(client: wrapper.AwsLambda) {
     request = memory.fold(request)(m => request.withMemorySize(m.value))
     request = vpcConfig.fold(request)(request.withVpcConfig)
     request = deadLetterName.fold(request)(n => request.withDeadLetterConfig(new DeadLetterConfig().withTargetArn(n.value)))
-=======
-    var request = CreateFunctionRequest.builder
-      .functionName(functionName.value)
-      .handler(handlerName.value)
-      .role(roleName.value)
-      .runtime(defaultRuntime)
-      .environment(environment)
-      .code(functionCode)
-    request = timeout.fold(request)(t => request.timeout(t.value))
-    request = memory.fold(request)(m => request.memorySize(m.value))
-    request = vpcConfig.fold(request)(request.vpcConfig)
-    request = deadLetterName.fold(request)(n => request.deadLetterConfig(DeadLetterConfig.builder.targetArn(n.value).build))
->>>>>>> 3eb40c9 (fix compile errors :-))
 
     for {
       createResult <- client.createFunction(request.build)

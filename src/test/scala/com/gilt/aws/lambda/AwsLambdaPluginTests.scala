@@ -43,13 +43,13 @@ object AwsLambdaPluginTests extends TestSuite {
     val local = Map("a" -> "1", "b" -> "2", "c" -> "3")
     val remote = Map("x" -> "1", "y" -> "2", "z" -> "3")
     val result = AwsLambdaPlugin.computeEnvironment(remote.asJava, local)
-    assert(result._2.getVariables.asScala == local ++ remote)
+    assert(result._2.variables.asScala == local ++ remote)
   }
 
   def environmentLocalOverRemote = {
     val local = Map("a" -> "1")
     val remote = Map("a" -> "3")
     val result = AwsLambdaPlugin.computeEnvironment(remote.asJava, local)
-    assert(result._2.getVariables.asScala == local)
+    assert(result._2.variables.asScala == local)
   }
 }

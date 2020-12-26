@@ -1,28 +1,26 @@
 package com.gilt.aws.lambda.wrapper
 
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
-import com.amazonaws.services.lambda.AWSLambdaClientBuilder
-import com.amazonaws.services.lambda.model._
 import scala.util.Try
-
-import com.gilt.aws.lambda.Region
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProviderChain
+import software.amazon.awssdk.services.lambda.LambdaClient
+import software.amazon.awssdk.services.lambda.model._
 
 trait AwsLambda {
-  def createFunction(req: CreateFunctionRequest): Try[CreateFunctionResult]
-  def updateFunctionCode(req: UpdateFunctionCodeRequest): Try[UpdateFunctionCodeResult]
-  def getFunctionConfiguration(req: GetFunctionConfigurationRequest): Try[GetFunctionConfigurationResult]
-  def updateFunctionConfiguration(req: UpdateFunctionConfigurationRequest): Try[UpdateFunctionConfigurationResult]
-  def tagResource(req: TagResourceRequest): Try[TagResourceResult]
+  def createFunction(req: CreateFunctionRequest): Try[CreateFunctionResponse]
+  def updateFunctionCode(req: UpdateFunctionCodeRequest): Try[UpdateFunctionCodeResponse]
+  def getFunctionConfiguration(req: GetFunctionConfigurationRequest): Try[GetFunctionConfigurationResponse]
+  def updateFunctionConfiguration(req: UpdateFunctionConfigurationRequest): Try[UpdateFunctionConfigurationResponse]
+  def tagResource(req: TagResourceRequest): Try[TagResourceResponse]
   def publishVersion(
-      request: PublishVersionRequest): Try[PublishVersionResult]
+      request: PublishVersionRequest): Try[PublishVersionResponse]
 }
 
 object AwsLambda {
-  def instance(region: Region): AwsLambda = {
-    val auth = new DefaultAWSCredentialsProviderChain()
-    val client = AWSLambdaClientBuilder.standard()
-      .withCredentials(auth)
-      .withRegion(region.value)
+  def instance(region: software.amazon.awssdk.regions.Region): AwsLambda = {
+    val auth = AwsCredentialsProviderChain.builder.build
+    val client = LambdaClient.builder
+      .credentialsProvider(auth)
+      .region(region)
       .build
 
     new AwsLambda {

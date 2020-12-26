@@ -1,7 +1,9 @@
 package com.gilt.aws.lambda
 
-import java.io.{ File, RandomAccessFile }
+import java.io.{File, RandomAccessFile}
 import java.nio.ByteBuffer
+
+import software.amazon.awssdk.core.SdkBytes
 
 object FileOps {
 

@@ -1,13 +1,13 @@
 package com.gilt.aws.lambda
 
-import com.amazonaws.services.identitymanagement.model._
+import software.amazon.awssdk.services.iam.model._
 import scala.util.{Failure, Success, Try}
 
 import utest._
 
 trait NotImplementedAmazonIdentityManagementWrapper extends wrapper.AmazonIdentityManagement {
-  def listRoles(): Try[ListRolesResult] = ???
-  def createRole(req: CreateRoleRequest): Try[CreateRoleResult] = ???
+  def listRoles(): Try[ListRolesResponse] = ???
+  def createRole(req: CreateRoleRequest): Try[CreateRoleResponse] = ???
 }
 
 object AwsIAMTests extends TestSuite {
@@ -26,12 +26,12 @@ object AwsIAMTests extends TestSuite {
   def getSome = {
     val client = new NotImplementedAmazonIdentityManagementWrapper {
       override def listRoles() = {
-        val result = (new ListRolesResult).withRoles(
-          new Role().withRoleName("a"),
-          new Role().withRoleName("b"),
-          new Role().withRoleName("c"),
-          new Role().withRoleName(AwsIAM.BasicLambdaRoleName)
-        )
+        val result = ListRolesResponse.builder.roles(
+          Role.builder.roleName("a").build,
+          Role.builder.roleName("b").build,
+          Role.builder.roleName("c").build,
+          Role.builder.roleName(AwsIAM.BasicLambdaRoleName).build
+        ).build
 
         Success(result)
       }
@@ -44,11 +44,11 @@ object AwsIAMTests extends TestSuite {
   def getNoneNoMatch = {
     val client = new NotImplementedAmazonIdentityManagementWrapper {
       override def listRoles() = {
-        val result = (new ListRolesResult).withRoles(
-          new Role().withRoleName("a"),
-          new Role().withRoleName("b"),
-          new Role().withRoleName("c")
-        )
+        val result = ListRolesResponse.builder.roles(
+          Role.builder.roleName("a").build,
+          Role.builder.roleName("b").build,
+          Role.builder.roleName("c").build
+        ).build
 
         Success(result)
       }
@@ -72,7 +72,7 @@ object AwsIAMTests extends TestSuite {
   def createWithName = {
     val client = new NotImplementedAmazonIdentityManagementWrapper {
       override def createRole(req: CreateRoleRequest) = {
-        assert(req.getRoleName() == AwsIAM.BasicLambdaRoleName)
+        assert(req.roleName() == AwsIAM.BasicLambdaRoleName)
         Failure(new Throwable)
       }
     }
@@ -84,8 +84,8 @@ object AwsIAMTests extends TestSuite {
     val arn = "my-role-arn"
     val client = new NotImplementedAmazonIdentityManagementWrapper {
       override def createRole(req: CreateRoleRequest) = {
-        val role = new Role().withArn(arn)
-        val result = new CreateRoleResult().withRole(role)
+        val role = Role.builder.arn(arn).build
+        val result = CreateRoleResponse.builder.role(role).build
         Success(result)
       }
     }

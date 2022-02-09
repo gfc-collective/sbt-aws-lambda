@@ -1,30 +1,34 @@
 package com.gilt.aws.lambda.wrapper
 
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
-import com.amazonaws.services.s3.AmazonS3ClientBuilder
-import com.amazonaws.services.s3.model.{Region => _, _}
-import scala.util.Try
+import software.amazon.awssdk.services.s3.model._
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
 
-import com.gilt.aws.lambda.Region
+import scala.util.Try
+import software.amazon.awssdk.services.s3.S3Client
 
 trait AmazonS3 {
-  def listBuckets(): Try[java.util.List[Bucket]]
-  def createBucket(bucket: String): Try[Bucket]
-  def putObject(req: PutObjectRequest): Try[PutObjectResult]
+  def listBuckets(): Try[ListBucketsResponse]
+  def createBucket(bucket: String): Try[CreateBucketResponse]
+  def putObject(req: PutObjectRequest, path: java.nio.file.Path): Try[PutObjectResponse]
 }
 
 object AmazonS3 {
-  def instance(region: Region): AmazonS3 = {
-    val auth = new DefaultAWSCredentialsProviderChain()
-    val client = AmazonS3ClientBuilder.standard()
-      .withCredentials(auth)
-      .withRegion(region.value)
+  def instance(region: software.amazon.awssdk.regions.Region): AmazonS3 = {
+    val auth = DefaultCredentialsProvider.create
+    val client = S3Client.builder
+      .credentialsProvider(auth)
+      .region(region)
       .build
 
     new AmazonS3 {
         def listBuckets() = Try(client.listBuckets)
-        def createBucket(bucket: String) = Try(client.createBucket(bucket))
-        def putObject(req: PutObjectRequest) = Try(client.putObject(req))
+        def createBucket(bucket: String) = Try( {
+          val req = CreateBucketRequest.builder
+            .bucket(bucket)
+            .build
+          client.createBucket(req)
+        })
+        def putObject(req: PutObjectRequest, path: java.nio.file.Path) = Try(client.putObject(req, path))
     }
   }
 }

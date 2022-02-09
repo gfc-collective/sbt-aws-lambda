@@ -1,6 +1,8 @@
 package com.gilt.aws.lambda
 
-import com.amazonaws.services.identitymanagement.model._
+// import com.amazonaws.services.identitymanagement.model._
+import software.amazon.awssdk.services.iam.model._
+
 import scala.collection.JavaConverters._
 import scala.util.Try
 
@@ -14,8 +16,8 @@ private[lambda] class AwsIAM(client: wrapper.AmazonIdentityManagement) {
   ): Option[Role] = {
     client.listRoles()
       .toOption
-      .flatMap { result =>
-        result.getRoles.asScala.find(_.getRoleName == AwsIAM.BasicLambdaRoleName)
+      .flatMap { response =>
+        response.roles.asScala.find(_.roleName == AwsIAM.BasicLambdaRoleName)
       }
   }
 
@@ -23,12 +25,13 @@ private[lambda] class AwsIAM(client: wrapper.AmazonIdentityManagement) {
   ): Try[RoleARN] = {
     val createRoleRequest = {
       val policyDocument = """{"Version":"2012-10-17","Statement":[{"Sid":"","Effect":"Allow","Principal":{"Service":"lambda.amazonaws.com"},"Action":"sts:AssumeRole"}]}"""
-      new CreateRoleRequest()
-        .withRoleName(AwsIAM.BasicLambdaRoleName)
-        .withAssumeRolePolicyDocument(policyDocument)
+      CreateRoleRequest.builder
+        .roleName(AwsIAM.BasicLambdaRoleName)
+        .assumeRolePolicyDocument(policyDocument)
+        .build
     }
 
     client.createRole(createRoleRequest)
-      .map { result => RoleARN(result.getRole.getArn) }
+      .map { result => RoleARN(result.role.arn) }
   }
 }

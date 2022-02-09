@@ -1,19 +1,25 @@
 package com.gilt.aws.lambda
 
-import com.amazonaws.services.lambda.model._
+import java.{lang, util}
+import java.util.function.Consumer
+
+import software.amazon.awssdk.awscore.AwsResponseMetadata
+import software.amazon.awssdk.core.{SdkField, SdkResponse}
+import software.amazon.awssdk.http.SdkHttpResponse
+import software.amazon.awssdk.services.lambda.model
+import software.amazon.awssdk.services.lambda.model.{CreateFunctionRequest, CreateFunctionResponse, DeadLetterConfig, Environment, EnvironmentResponse, GetFunctionConfigurationRequest, GetFunctionConfigurationResponse, LambdaResponse, LambdaResponseMetadata, Layer, PublishVersionRequest, PublishVersionResponse, ResourceNotFoundException, TagResourceRequest, TagResourceResponse, TracingConfigResponse, UpdateFunctionCodeRequest, UpdateFunctionCodeResponse, UpdateFunctionConfigurationRequest, UpdateFunctionConfigurationResponse, VpcConfig, VpcConfigResponse}
+
 import scala.collection.JavaConverters._
 import scala.util.{Failure, Success, Try}
-
 import utest._
 
 trait NotImplementedAwsLambdaWrapper extends wrapper.AwsLambda {
-  def createFunction(req: CreateFunctionRequest): Try[CreateFunctionResult] = ???
-  def updateFunctionCode(req: UpdateFunctionCodeRequest): Try[UpdateFunctionCodeResult] = ???
-  def getFunctionConfiguration(req: GetFunctionConfigurationRequest): Try[GetFunctionConfigurationResult] = ???
-  def updateFunctionConfiguration(req: UpdateFunctionConfigurationRequest): Try[UpdateFunctionConfigurationResult] = ???
-  def tagResource(req: TagResourceRequest): Try[TagResourceResult] = ???
-  def publishVersion(
-      request: PublishVersionRequest): Try[PublishVersionResult] = ???
+  def createFunction(req: CreateFunctionRequest): Try[CreateFunctionResponse] = ???
+  def updateFunctionCode(req: UpdateFunctionCodeRequest): Try[UpdateFunctionCodeResponse] = ???
+  def getFunctionConfiguration(req: GetFunctionConfigurationRequest): Try[GetFunctionConfigurationResponse] = ???
+  def updateFunctionConfiguration(req: UpdateFunctionConfigurationRequest): Try[UpdateFunctionConfigurationResponse] = ???
+  def tagResource(req: TagResourceRequest): Try[TagResourceResponse] = ???
+  def publishVersion(request: PublishVersionRequest): Try[PublishVersionResponse] = ???
 }
 
 object AwsLambdaTests extends TestSuite {
@@ -69,7 +75,7 @@ object AwsLambdaTests extends TestSuite {
     val arn = "my-arn"
     val client = new NotImplementedAwsLambdaWrapper {
       override def tagResource(req: TagResourceRequest) = {
-        assert(req.getResource() == arn)
+        assert(req.resource() == arn)
         Failure(new Throwable)
       }
     }
@@ -83,9 +89,9 @@ object AwsLambdaTests extends TestSuite {
     val version = "version"
     val client = new NotImplementedAwsLambdaWrapper {
       override def publishVersion(request: PublishVersionRequest) = {
-        assert(request.getFunctionName == name)
-        assert(request.getRevisionId == revisionId)
-        assert(request.getDescription == version)
+        assert(request.functionName == name)
+        assert(request.revisionId == revisionId)
+        assert(request.description == version)
         Failure(new Throwable)
       }
     }
@@ -96,7 +102,7 @@ object AwsLambdaTests extends TestSuite {
   def tagWithTimestamp = {
     val client = new NotImplementedAwsLambdaWrapper {
       override def tagResource(req: TagResourceRequest) = {
-        assert(req.getTags().asScala.contains("deploy.timestamp"))
+        assert(req.tags().asScala.contains("deploy.timestamp"))
         Failure(new Throwable)
       }
     }
@@ -108,7 +114,7 @@ object AwsLambdaTests extends TestSuite {
     val version = "my-version"
     val client = new NotImplementedAwsLambdaWrapper {
       override def tagResource(req: TagResourceRequest) = {
-        assert(req.getTags().asScala.get("deploy.code.version") == Some(version))
+        assert(req.tags().asScala.get("deploy.code.version") == Some(version))
         Failure(new Throwable)
       }
     }
@@ -120,7 +126,7 @@ object AwsLambdaTests extends TestSuite {
     val functionName = "my-function-name"
     val client = new NotImplementedAwsLambdaWrapper {
       override def getFunctionConfiguration(req: GetFunctionConfigurationRequest) = {
-        assert(req.getFunctionName() == functionName)
+        assert(req.functionName() == functionName)
         Failure(new Throwable)
       }
     }
@@ -129,7 +135,8 @@ object AwsLambdaTests extends TestSuite {
   }
 
   def getSuccess = {
-    val expected = new GetFunctionConfigurationResult()
+    val expected = GetFunctionConfigurationResponse.builder().build()
+
     val client = new NotImplementedAwsLambdaWrapper {
       override def getFunctionConfiguration(req: GetFunctionConfigurationRequest) = {
         Success(expected)
@@ -192,7 +199,7 @@ object AwsLambdaTests extends TestSuite {
     val functionName = "my-function-name"
     val client = new NotImplementedAwsLambdaWrapper {
       override def updateFunctionConfiguration(req: UpdateFunctionConfigurationRequest) = {
-        assert(req.getFunctionName == functionName)
+        assert(req.functionName == functionName)
         Failure(new Throwable)
       }
     }
@@ -204,7 +211,7 @@ object AwsLambdaTests extends TestSuite {
     val handler = "my-handler"
     val client = new NotImplementedAwsLambdaWrapper {
       override def updateFunctionConfiguration(req: UpdateFunctionConfigurationRequest) = {
-        assert(req.getHandler == handler)
+        assert(req.handler == handler)
         Failure(new Throwable)
       }
     }
@@ -216,7 +223,7 @@ object AwsLambdaTests extends TestSuite {
     val role = "my-role"
     val client = new NotImplementedAwsLambdaWrapper {
       override def updateFunctionConfiguration(req: UpdateFunctionConfigurationRequest) = {
-        assert(req.getRole == role)
+        assert(req.role == role)
         Failure(new Throwable)
       }
     }
@@ -227,7 +234,7 @@ object AwsLambdaTests extends TestSuite {
   def updateWithRuntime = {
     val client = new NotImplementedAwsLambdaWrapper {
       override def updateFunctionConfiguration(req: UpdateFunctionConfigurationRequest) = {
-        assert(req.getRuntime == "java8")
+        assert(req.runtime.name == "java8")
         Failure(new Throwable)
       }
     }
@@ -239,7 +246,7 @@ object AwsLambdaTests extends TestSuite {
     val environmentVariables = Map("a" -> "1", "b" -> "2", "c" -> "3").asJava
     val client = new NotImplementedAwsLambdaWrapper {
       override def updateFunctionConfiguration(req: UpdateFunctionConfigurationRequest) = {
-        assert(req.getEnvironment.getVariables() == environmentVariables)
+        assert(req.environment.variables == environmentVariables)
         Failure(new Throwable)
       }
     }
@@ -251,7 +258,7 @@ object AwsLambdaTests extends TestSuite {
     val timeout = 1
     val client = new NotImplementedAwsLambdaWrapper {
       override def updateFunctionConfiguration(req: UpdateFunctionConfigurationRequest) = {
-        assert(req.getTimeout == timeout)
+        assert(req.timeout.intValue == timeout.intValue)
         Failure(new Throwable)
       }
     }
@@ -262,7 +269,7 @@ object AwsLambdaTests extends TestSuite {
   def updateWithoutTimeout = {
     val client = new NotImplementedAwsLambdaWrapper {
       override def updateFunctionConfiguration(req: UpdateFunctionConfigurationRequest) = {
-        assert(req.getTimeout == null)
+        assert(req.timeout == null)
         Failure(new Throwable)
       }
     }

@@ -33,7 +33,7 @@ object AwsLambdaPlugin extends AutoPlugin {
     val lambdaRuntime = settingKey[String](s"""The Lambda Runtime. Type 'supportedRuntimes' to confirming supported runtimes""")
     val packageLambda = taskKey[File]("The action to package the lambda jar file")
     private[lambda] val resolveRuntime = taskKey[Runtime]("Resolve lambda runtime")
-    private[lambda] val supportedLambdaRuntimes = settingKey[List[String]]("Supported runtime")
+    private[lambda] val supportedLambdaRuntimes = settingKey[List[String]]("Supported runtimes")
   }
 
   import autoImport._
@@ -106,7 +106,7 @@ object AwsLambdaPlugin extends AutoPlugin {
     resolveRuntime := Def.task {
       val resolvedRuntime = lambdaRuntime.value
       val resolvedSupportedRuntime = supportedLambdaRuntimes.value
-        resolveLambdaRuntime(promptUserForLambdaRuntime(resolvedRuntime, resolvedSupportedRuntime), resolvedSupportedRuntime)
+      resolveLambdaRuntime(resolvedRuntime, resolvedSupportedRuntime)
     }.value,
     s3Bucket := None,
     lambdaName := Some(sbt.Keys.name.value),

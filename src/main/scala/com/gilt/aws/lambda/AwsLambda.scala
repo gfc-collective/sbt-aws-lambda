@@ -3,7 +3,7 @@ package com.gilt.aws.lambda
 import java.time.Instant
 import com.amazonaws.services.lambda.model._
 import scala.collection.JavaConverters._
-import scala.util.Try
+import scala.util.{Success, Try}
 
 private[lambda] class AwsLambda(client: wrapper.AwsLambda) {
 
@@ -19,6 +19,17 @@ private[lambda] class AwsLambda(client: wrapper.AwsLambda) {
     client.publishVersion(request)
   }
 
+  def waitForLambdaReady(name: LambdaName): Try[Option[String]] = {
+    getLambdaConfig(name).flatMap {
+      case None => Success(None)
+      case Some(result) if result.getLastUpdateStatus == "Successful" && result.getState == "Active" => Success(Some(result.getRevisionId))
+      case Some(result) =>
+        println(s"Waiting for lambda [name: ${name.value} status: ${result.getLastUpdateStatus} state: ${result.getState}] to be ready.")
+        Thread.sleep(500)
+        waitForLambdaReady(name)
+    }
+  }
+
   def updateLambdaWithFunctionCodeRequest(
     updateFunctionCodeRequest: UpdateFunctionCodeRequest,
     version: String,
@@ -26,8 +37,9 @@ private[lambda] class AwsLambda(client: wrapper.AwsLambda) {
     println(s"Updating lambda code ${updateFunctionCodeRequest.getFunctionName}")
     for {
       updateResult <- client.updateFunctionCode(updateFunctionCodeRequest)
-      _ = println(s"Updated lambda code ${updateResult.getFunctionArn}")
-      _ <- publishVersion(name = updateResult.getFunctionName, revisionId = updateResult.getRevisionId, version = version)
+      _ = println(s"Updated lambda code ${updateResult.getFunctionArn} revision ${updateResult.getRevisionId}")
+      revisionId <- waitForLambdaReady(LambdaName(updateFunctionCodeRequest.getFunctionName))
+      _ <- publishVersion(name = updateResult.getFunctionName, revisionId = revisionId.getOrElse(updateResult.getRevisionId), version = version)
     } yield {
       updateResult
     }

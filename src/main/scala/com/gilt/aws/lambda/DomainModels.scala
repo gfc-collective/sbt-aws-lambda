@@ -3,11 +3,13 @@ package com.gilt.aws.lambda
 case class Region(value: String)
 case class S3BucketId(value: String)
 case class S3Key(value: String)
+case class S3ObjectVersion(key: String, version: Option[String])
 case class LambdaName(value: String)
 case class LambdaARN(value: String)
 case class HandlerName(value: String)
 case class RoleARN(value: String)
 case class DeployMethod(value: String)
+case class SigningProfile(value: String)
 case class Timeout(value: Int) {
   require(value > 0 && value <= 900, "Lambda timeout must be between 1 and 900 seconds")
 }
@@ -29,6 +31,7 @@ object EnvironmentVariables {
   val timeout = "AWS_LAMBDA_TIMEOUT"
   val memory = "AWS_LAMBDA_MEMORY"
   val deployMethod = "AWS_LAMBDA_DEPLOY_METHOD"
+  val signingProfile = "AWS_LAMBDA_SIGNING_PROFILE"
   val deadLetterArn = "AWS_LAMBDA_DEAD_LETTER_ARN"
   val vpcConfigSubnetIds = "AWS_LAMBDA_VPC_CONFIG_SUBNET_IDS"
   val vpcConfigSecurityGroupIds = "AWS_LAMBDA_VPC_CONFIG_SECURITY_GROUP_IDS"

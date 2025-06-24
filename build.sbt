@@ -10,6 +10,7 @@ lazy val commonSettings = Seq(
     "com.amazonaws"  % "aws-java-sdk-iam"    % "1.11.1030",
     "com.amazonaws"  % "aws-java-sdk-lambda" % "1.11.1030",
     "com.amazonaws"  % "aws-java-sdk-s3"     % "1.11.1030",
+    "com.amazonaws"  % "aws-java-sdk-signer"     % "1.11.1030",
   ),
   // Testing
   libraryDependencies += "com.lihaoyi" %% "utest" % "0.7.11" % "test",

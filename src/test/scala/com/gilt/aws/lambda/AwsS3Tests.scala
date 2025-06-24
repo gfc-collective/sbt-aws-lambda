@@ -72,7 +72,7 @@ object AwsS3Tests extends TestSuite {
   def putsWithAcl = {
     val client = new NotImplementedAmazonS3Wrapper {
       override def putObject(req: PutObjectRequest) = {
-        assert(req.getCannedAcl == CannedAccessControlList.AuthenticatedRead)
+        assert(req.getCannedAcl == null)
         Failure(new Throwable)
       }
     }

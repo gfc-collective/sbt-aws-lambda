@@ -174,7 +174,7 @@ object AwsLambdaPlugin extends AutoPlugin {
 
       s3Client.pushJarToS3(jar, resolvedBucketId, resolvedS3KeyPrefix).flatMap { objectVersion =>
         resolvedSigningProfile.fold(Success(S3Key(objectVersion.key)): Try[S3Key]) { signingProfile =>
-          signerClient.signPackage(resolvedBucketId, objectVersion, signingProfile)
+          signerClient.signPackage(resolvedBucketId, resolvedS3KeyPrefix, objectVersion, signingProfile)
         }
       } match {
         case Success(s3Key) =>
@@ -284,7 +284,7 @@ object AwsLambdaPlugin extends AutoPlugin {
               val resolvedSigningProfile = resolveSigningProfile(signingProfile)
               s3Client.pushJarToS3(jar, resolvedBucketId, resolvedS3KeyPrefix).flatMap { objectVersion =>
                 resolvedSigningProfile.fold(Success(S3Key(objectVersion.key)): Try[S3Key]) { signingProfile =>
-                  signerClient.signPackage(resolvedBucketId, objectVersion, signingProfile)
+                  signerClient.signPackage(resolvedBucketId, resolvedS3KeyPrefix, objectVersion, signingProfile)
                 }
               } match {
                 case Success(_) =>
@@ -406,7 +406,7 @@ object AwsLambdaPlugin extends AutoPlugin {
       val resolvedSigningProfile = resolveSigningProfile(signingProfile)
       s3Client.pushJarToS3(jar, resolvedBucketId, resolvedS3KeyPrefix).flatMap { objectVersion =>
         resolvedSigningProfile.fold(Success(S3Key(objectVersion.key)): Try[S3Key]) { signingProfile =>
-          signerClient.signPackage(resolvedBucketId, objectVersion, signingProfile)
+          signerClient.signPackage(resolvedBucketId, resolvedS3KeyPrefix, objectVersion, signingProfile)
         }
       } match {
         case Success(_) =>

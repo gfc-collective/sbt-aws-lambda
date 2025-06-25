@@ -12,24 +12,24 @@ import com.amazonaws.services.signer.model.{
 import scala.util.{Failure, Success, Try}
 
 private[lambda] class Signer(client: wrapper.AwsSigner) {
-  def signPackage(bucket: S3BucketId, objectVersion: S3ObjectVersion, signingProfile: SigningProfile): Try[S3Key] = {
-    val parentOpt = parent(objectVersion.key)
+  def signPackage(bucket: S3BucketId, prefix: String, objectVersion: S3ObjectVersion, signingProfile: SigningProfile): Try[S3Key] = {
     for {
-      jobId <- startSigningJob(bucket, objectVersion, signingProfile)
-      _ <- waitJobCompletion(jobId)
-    } yield parentOpt.fold(S3Key(jobId))(p => S3Key(s"$p/$jobId"))
+      jobId <- startSigningJob(bucket, prefix, objectVersion, signingProfile)
+      signedKey <- waitJobCompletion(jobId)
+    } yield signedKey
   }
 
   private def startSigningJob(
-    bucket: S3BucketId,
-    objectVersion: S3ObjectVersion,
-    signingProfile: SigningProfile,
+                               bucket: S3BucketId,
+                               destinationPrefix: String,
+                               objectVersion: S3ObjectVersion,
+                               signingProfile: SigningProfile,
   ): Try[String] = {
     objectVersion.version match {
       case None =>
         Failure(new RuntimeException("cannot sign an S3 object without a version - is bucket versioning enabled?"))
       case Some(version) =>
-        val destinationPrefix = parent(objectVersion.key).getOrElse("")
+        println(s"Starting signing job for s3://${bucket.value}/${objectVersion.key}...")
         client
           .startSigningJob(
             new StartSigningJobRequest()
@@ -49,24 +49,19 @@ private[lambda] class Signer(client: wrapper.AwsSigner) {
     }
   }
 
-  private def waitJobCompletion(jobId: String): Try[Unit] = {
+  private def waitJobCompletion(jobId: String): Try[S3Key] = {
+    println(s"Checking if signing job $jobId is complete...")
     client.describeSigningJob(new DescribeSigningJobRequest().withJobId(jobId)).flatMap { r =>
       r.getStatus match {
-        case "Succeeded" => Success(())
+        case "Succeeded" =>
+          println(s"Signing job $jobId is complete.")
+          Success(S3Key(r.getSignedObject.getS3.getKey))
         case "InProgress" =>
           Thread.sleep(5000L)
           waitJobCompletion(jobId)
         case "Failed" => Failure(new RuntimeException(s"Signing job failed: ${r.getStatusReason}"))
         case unknownStatus => Failure(new RuntimeException(s"Signing job unexpected status $unknownStatus"))
       }
-    }
-  }
-
-  private def parent(key: String): Option[String] = {
-    val elems = key.split("/")
-    elems.length match {
-      case 0 => None
-      case _ => Some(elems.dropRight(1).mkString("/"))
     }
   }
 }

@@ -1,7 +1,12 @@
+import xerial.sbt.Sonatype.sonatypeCentralHost
+
+ThisBuild / sonatypeCredentialHost := sonatypeCentralHost
 
 publishMavenStyle := true
 
-publishTo := sonatypePublishTo.value
+sbtPluginPublishLegacyMavenStyle := false
+
+publishTo := sonatypePublishToBundle.value
 
 publishArtifact in Test := false
 

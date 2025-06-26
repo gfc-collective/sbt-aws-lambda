@@ -72,7 +72,7 @@ object AwsS3Tests extends TestSuite {
   def putsWithAcl = {
     val client = new NotImplementedAmazonS3Wrapper {
       override def putObject(req: PutObjectRequest) = {
-        assert(req.getCannedAcl == CannedAccessControlList.AuthenticatedRead)
+        assert(req.getCannedAcl == null)
         Failure(new Throwable)
       }
     }
@@ -85,13 +85,15 @@ object AwsS3Tests extends TestSuite {
     val fileName = "my-file"
     val client = new NotImplementedAmazonS3Wrapper {
       override def putObject(req: PutObjectRequest) = {
-        Success(new PutObjectResult)
+        Success({ val r = new PutObjectResult
+r.setVersionId("foo")
+r})
       }
     }
 
     val result = new AwsS3(client).pushJarToS3(new File(fileName), S3BucketId(""), prefix)
     assert(result.isSuccess)
-    assert(result.get == S3Key(s"${prefix}${fileName}"))
+    assert(result.get == S3ObjectVersion(s"${prefix}${fileName}", Some("foo")))
   }
 
   def getSome = {

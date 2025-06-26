@@ -34,7 +34,7 @@ private[lambda] class AwsLambda(client: wrapper.AwsLambda) {
     updateFunctionCodeRequest: UpdateFunctionCodeRequest,
     version: String,
   ): Try[UpdateFunctionCodeResult] = {
-    println(s"Updating lambda code ${updateFunctionCodeRequest.getFunctionName}")
+    println(s"Updating lambda code ${updateFunctionCodeRequest.getFunctionName} to s3://${updateFunctionCodeRequest.getS3Bucket}/${updateFunctionCodeRequest.getS3Key}")
     for {
       updateResult <- client.updateFunctionCode(updateFunctionCodeRequest)
       _ = println(s"Updated lambda code ${updateResult.getFunctionArn} revision ${updateResult.getRevisionId}")

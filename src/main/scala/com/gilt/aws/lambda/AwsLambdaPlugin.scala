@@ -3,6 +3,8 @@ package com.gilt.aws.lambda
 import java.util.{Collections, Map => JMap}
 
 import scala.collection.JavaConverters._
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
 import com.amazonaws.services.lambda.model.{Environment, FunctionCode, Runtime, UpdateFunctionCodeRequest, VpcConfig}
 import sbt.Keys._
@@ -16,6 +18,9 @@ object AwsLambdaPlugin extends AutoPlugin {
     )
     val deployLambda =
       taskKey[Map[String, LambdaARN]]("Packages and deploys the current project to an existing AWS Lambda")
+    val deployLambdaInWaves = taskKey[Map[String, LambdaARN]](
+      "Like deployLambda, but deploys handlers in waves of doubling size (1, 2, 4, 8, …); handlers in the same wave run in parallel.",
+    )
     val createLambda = taskKey[Map[String, LambdaARN]](
       "[Deprecated] Create a new AWS Lambda function from the current project. Use configureLambda instead.",
     )
@@ -77,6 +82,18 @@ object AwsLambdaPlugin extends AutoPlugin {
       resolvedRuntime = resolveRuntime.value,
     ),
     deployLambda := doDeployLambda(
+      deployMethod = deployMethod.value,
+      signingProfile = signingProfile.value,
+      region = region.value,
+      jar = packageLambda.value,
+      s3Bucket = s3Bucket.value,
+      s3KeyPrefix = s3KeyPrefix.?.value,
+      lambdaName = lambdaName.value,
+      handlerName = handlerName.value,
+      lambdaHandlers = lambdaHandlers.value,
+      version = version.value,
+    ),
+    deployLambdaInWaves := doDeployLambdaInWaves(
       deployMethod = deployMethod.value,
       signingProfile = signingProfile.value,
       region = region.value,
@@ -200,6 +217,92 @@ object AwsLambdaPlugin extends AutoPlugin {
       }).toMap
     } else
       sys.error(s"Unsupported deploy method: ${resolvedDeployMethod.value}")
+  }
+
+  private def doDeployLambdaInWaves(
+    deployMethod: Option[String],
+    signingProfile: Option[String],
+    region: Option[String],
+    jar: File,
+    s3Bucket: Option[String],
+    s3KeyPrefix: Option[String],
+    lambdaName: Option[String],
+    handlerName: Option[String],
+    lambdaHandlers: Seq[(String, String)],
+    version: String,
+  ): Map[String, LambdaARN] = {
+    val resolvedDeployMethod = resolveDeployMethod(deployMethod)
+    val resolvedRegion = resolveRegion(region)
+    val resolvedLambdaHandlers = resolveLambdaHandlers(lambdaName, handlerName, lambdaHandlers)
+
+    val s3Client = new AwsS3(wrapper.AmazonS3.instance(resolvedRegion))
+    val signerClient = new Signer(wrapper.AwsSigner.instance(resolvedRegion))
+
+    if (resolvedDeployMethod.value == "S3") {
+      val resolvedBucketId = resolveBucketId(resolvedRegion, s3Bucket)
+      val resolvedS3KeyPrefix = resolveS3KeyPrefix(s3KeyPrefix)
+      val resolvedSigningProfile = resolveSigningProfile(signingProfile)
+
+      s3Client.pushJarToS3(jar, resolvedBucketId, resolvedS3KeyPrefix).flatMap { objectVersion =>
+        resolvedSigningProfile.fold(Success(S3Key(objectVersion.key)): Try[S3Key]) { signingProfile =>
+          signerClient.signPackage(resolvedBucketId, resolvedS3KeyPrefix, objectVersion, signingProfile)
+        }
+      } match {
+        case Success(s3Key) =>
+          deployHandlersInWaves(resolvedLambdaHandlers.keys) { name =>
+            val request = new UpdateFunctionCodeRequest()
+              .withFunctionName(name.value)
+              .withS3Bucket(resolvedBucketId.value)
+              .withS3Key(s3Key.value)
+            updateFunctionCode(resolvedRegion, name, request, version)
+          }
+        case Failure(exception) =>
+          sys.error(s"Error uploading jar to S3 lambda: ${formatException(exception)}")
+      }
+    } else if (resolvedDeployMethod.value == "DIRECT") {
+      deployHandlersInWaves(resolvedLambdaHandlers.keys) { name =>
+        val request = new UpdateFunctionCodeRequest()
+          .withFunctionName(name.value)
+          .withZipFile(FileOps.fileToBuffer(jar))
+        updateFunctionCode(resolvedRegion, name, request, version)
+      }
+    } else
+      sys.error(s"Unsupported deploy method: ${resolvedDeployMethod.value}")
+  }
+
+  // Visible to tests so the wave-shape can be asserted directly.
+  private[lambda] def splitIntoWaves[A](items: Seq[A]): Seq[Seq[A]] = {
+    val builder = Seq.newBuilder[Seq[A]]
+    var remaining = items
+    var size = 1
+    while (remaining.nonEmpty) {
+      val (head, tail) = remaining.splitAt(size)
+      builder += head
+      remaining = tail
+      size *= 2
+    }
+    builder.result()
+  }
+
+  private def deployHandlersInWaves(
+    handlers: Iterable[LambdaName],
+  )(
+    deploy: LambdaName => (String, LambdaARN),
+  ): Map[String, LambdaARN] = {
+    val ordered = handlers.toSeq.sortBy(_.value)
+    val waves = splitIntoWaves(ordered)
+    implicit val ec: ExecutionContext = ExecutionContext.global
+
+    waves.zipWithIndex.foldLeft(Map.empty[String, LambdaARN]) {
+      case (acc, (wave, idx)) =>
+        val handlerWord = if (wave.size == 1) "handler" else "handlers"
+        println(
+          s"Deploying wave ${idx + 1}/${waves.size} (${wave.size} $handlerWord): ${wave.map(_.value).mkString(", ")}",
+        )
+        val futures = wave.map(h => Future(deploy(h)))
+        val results = Await.result(Future.sequence(futures), Duration.Inf)
+        acc ++ results.toMap
+    }
   }
 
   def updateFunctionCode(

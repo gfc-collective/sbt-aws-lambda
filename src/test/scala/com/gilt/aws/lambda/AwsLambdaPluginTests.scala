@@ -13,6 +13,12 @@ object AwsLambdaPluginTests extends TestSuite {
       "environment union of remote, and local" - environmentUnion
       "environment local over remote" - environmentLocalOverRemote
     }
+    "Split into waves" - {
+      "empty list yields no waves" - splitEmpty
+      "single item yields one wave of one" - splitSingle
+      "doubling pattern with remainder preserves order and size" - splitNineteen
+      "exact doubling boundary uses only powers of two" - splitFifteen
+    }
   }
 
   def noUpdatesIdentical = {
@@ -51,5 +57,25 @@ object AwsLambdaPluginTests extends TestSuite {
     val remote = Map("a" -> "3")
     val result = AwsLambdaPlugin.computeEnvironment(remote.asJava, local)
     assert(result._2.getVariables.asScala == local)
+  }
+
+  def splitEmpty = {
+    assert(AwsLambdaPlugin.splitIntoWaves(Seq.empty[Int]) == Seq.empty)
+  }
+
+  def splitSingle = {
+    assert(AwsLambdaPlugin.splitIntoWaves(Seq(42)) == Seq(Seq(42)))
+  }
+
+  def splitNineteen = {
+    val items = (1 to 19).toSeq
+    val waves = AwsLambdaPlugin.splitIntoWaves(items)
+    assert(waves.map(_.size) == Seq(1, 2, 4, 8, 4))
+    assert(waves.flatten == items)
+  }
+
+  def splitFifteen = {
+    val waves = AwsLambdaPlugin.splitIntoWaves((1 to 15).toSeq)
+    assert(waves.map(_.size) == Seq(1, 2, 4, 8))
   }
 }

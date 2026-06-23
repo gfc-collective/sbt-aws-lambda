@@ -13,7 +13,7 @@ lazy val commonSettings = Seq(
     "com.amazonaws"  % "aws-java-sdk-signer"     % "1.11.1030",
   ),
   // Testing
-  libraryDependencies += "com.lihaoyi" %% "utest" % "0.7.11" % "test",
+  libraryDependencies += "com.lihaoyi" %% "utest" % "0.8.4" % "test",
   testFrameworks += new TestFramework("utest.runner.Framework"),
 )
 

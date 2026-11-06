@@ -19,7 +19,7 @@ object AwsLambdaPlugin extends AutoPlugin {
     val deployLambda =
       taskKey[Map[String, LambdaARN]]("Packages and deploys the current project to an existing AWS Lambda")
     val deployLambdaInWaves = taskKey[Map[String, LambdaARN]](
-      "Like deployLambda, but deploys handlers in waves of doubling size (1, 2, 4, 8, …); handlers in the same wave run in parallel.",
+      "Like deployLambda, but deploys handlers in waves of doubling size (1, 2, 4, 8, 8, …); handlers in the same wave run in parallel.",
     )
     val createLambda = taskKey[Map[String, LambdaARN]](
       "[Deprecated] Create a new AWS Lambda function from the current project. Use configureLambda instead.",
@@ -270,6 +270,9 @@ object AwsLambdaPlugin extends AutoPlugin {
       sys.error(s"Unsupported deploy method: ${resolvedDeployMethod.value}")
   }
 
+  // Larger waves exceed the Lambda control-plane request rate while their handlers poll for readiness.
+  private[lambda] val MaxWaveSize = 8
+
   // Visible to tests so the wave-shape can be asserted directly.
   private[lambda] def splitIntoWaves[A](items: Seq[A]): Seq[Seq[A]] = {
     val builder = Seq.newBuilder[Seq[A]]
@@ -279,7 +282,7 @@ object AwsLambdaPlugin extends AutoPlugin {
       val (head, tail) = remaining.splitAt(size)
       builder += head
       remaining = tail
-      size *= 2
+      size = math.min(size * 2, MaxWaveSize)
     }
     builder.result()
   }

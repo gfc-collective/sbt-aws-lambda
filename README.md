@@ -133,8 +133,11 @@ The runtimes that can be specified in `lambdaRuntime` are` nodejs10.x` and `node
 Publishing new versions of this plugin
 --------------------------------------
 
-This plugin uses [sbt-sonatype](https://github.com/xerial/sbt-sonatype) to publish to maven central
+This plugin uses [sbt-sonatype](https://github.com/xerial/sbt-sonatype) to publish to maven central.
+Bump the version in `version.sbt`, merge it to `main`, then release from an up-to-date `main`:
 
 ```
-sbt publishSigned sonatypeBundleRelease
+sbt release
 ```
+
+This publishes the signed artifacts, releases the bundle on Sonatype, then creates and pushes the `v<version>` git tag.

@@ -1,4 +1,5 @@
 import scala.sys.process._
+import ReleaseTransformations._
 
 lazy val commonSettings = Seq(
   crossSbtVersions := List("1.2.8"),
@@ -22,6 +23,15 @@ lazy val root =
     .settings(commonSettings: _*)
     .settings(
       name := "sbt-aws-lambda",
+      releaseProcess := Seq[ReleaseStep](
+        checkSnapshotDependencies,
+        runClean,
+        runTest,
+        publishArtifacts,
+        releaseStepCommand("sonatypeBundleRelease"),
+        tagRelease,
+        pushChanges,
+      ),
       libraryDependencies += {
         val sbtV     = (sbtBinaryVersion in pluginCrossBuild).value
         val scalaV   = (scalaBinaryVersion in update).value

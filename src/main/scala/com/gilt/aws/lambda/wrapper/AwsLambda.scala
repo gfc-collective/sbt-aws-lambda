@@ -1,6 +1,8 @@
 package com.gilt.aws.lambda.wrapper
 
+import com.amazonaws.ClientConfiguration
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
+import com.amazonaws.retry.PredefinedRetryPolicies
 import com.amazonaws.services.lambda.AWSLambdaClientBuilder
 import com.amazonaws.services.lambda.model._
 import scala.util.Try
@@ -23,6 +25,9 @@ object AwsLambda {
     val client = AWSLambdaClientBuilder.standard()
       .withCredentials(auth)
       .withRegion(region.value)
+      .withClientConfiguration(
+        new ClientConfiguration().withRetryPolicy(PredefinedRetryPolicies.getDefaultRetryPolicyWithCustomMaxRetries(10))
+      )
       .build
 
     new AwsLambda {

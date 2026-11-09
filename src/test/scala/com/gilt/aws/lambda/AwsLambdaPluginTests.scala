@@ -18,6 +18,7 @@ object AwsLambdaPluginTests extends TestSuite {
       "single item yields one wave of one" - splitSingle
       "doubling pattern with remainder preserves order and size" - splitNineteen
       "exact doubling boundary uses only powers of two" - splitFifteen
+      "wave size is capped" - splitThirtyTwo
     }
   }
 
@@ -77,5 +78,12 @@ object AwsLambdaPluginTests extends TestSuite {
   def splitFifteen = {
     val waves = AwsLambdaPlugin.splitIntoWaves((1 to 15).toSeq)
     assert(waves.map(_.size) == Seq(1, 2, 4, 8))
+  }
+
+  def splitThirtyTwo = {
+    val items = (1 to 32).toSeq
+    val waves = AwsLambdaPlugin.splitIntoWaves(items)
+    assert(waves.map(_.size) == Seq(1, 2, 4, 8, 8, 8, 1))
+    assert(waves.flatten == items)
   }
 }

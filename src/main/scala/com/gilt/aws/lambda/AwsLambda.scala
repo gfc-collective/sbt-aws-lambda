@@ -25,7 +25,7 @@ private[lambda] class AwsLambda(client: wrapper.AwsLambda) {
       case Some(result) if result.getLastUpdateStatus == "Successful" && result.getState == "Active" => Success(Some(result.getRevisionId))
       case Some(result) =>
         println(s"Waiting for lambda [name: ${name.value} status: ${result.getLastUpdateStatus} state: ${result.getState}] to be ready.")
-        Thread.sleep(500)
+        Thread.sleep(2000)
         waitForLambdaReady(name)
     }
   }
